@@ -1,7 +1,11 @@
-""" ... """
+"""
+Author: Riyam Arabo
+Last updated: 11/15/2018
+Version: 1.0
+Purpose: To collect data from Meetup.com's API regarding upcoming events related to programming
+"""
 import logging
 from sensor import SensorX
-import json
 import os
 import time
 from requests import Timeout, HTTPError, ConnectionError
@@ -23,17 +27,17 @@ class Meetup(SensorX):
 
 
     def has_updates(self, k):
-        """ finding out if there are noew updates """
+        """ finding out if there are new updates since last API request 'k' """
         n = 0
         content = self.get_all()
         for i in range(len(content)):
             if content[i]['k'] == k:
-                n = i +1
+                n = i + 1
                 break
         return len(content) if n == 0 else len(content)-n
 
     def get_content(self, k):
-        """ return new events since k """
+        """ return new events since last request 'k' """
         content = self.get_all()  # newest last
         n = 0
         for i in range(len(content)):
@@ -68,8 +72,7 @@ class Meetup(SensorX):
 
     @staticmethod
     def _create_content(text):
-        """ convert the json response from the web-service into a list of dictionaries that meets our needs.
-        Parse the json content, which can be found in the javascript of the web page."""
+        """ convert the json response from the web-service into a list of dictionaries that meets our needs."""
         record = []
 
         for event in text['events']:
