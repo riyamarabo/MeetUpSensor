@@ -10,13 +10,14 @@ import os
 import time
 from requests import Timeout, HTTPError, ConnectionError
 import requests
+from datetime import datetime
 
 
-# logging.basicConfig(
-#     level=logging.INFO,
-#     filename=os.path.join(os.path.sep, os.getcwd(), 'logs', 'meetup.log'),
-#     filemode='a',
-#     format='%(asctime)s - %(lineno)d - %(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    filename=os.path.join(os.getcwd(), 'logs', 'meetup.log'),
+    filemode='a',
+    format='%(asctime)s - %(lineno)d - %(message)s')
 
 class Meetup(SensorX):
     __CONFIG_FILE = 'Meetup.json'
@@ -74,16 +75,40 @@ class Meetup(SensorX):
     def _create_content(text):
         """ convert the json response from the web-service into a list of dictionaries that meets our needs."""
         record = []
-
+        n=0
         for event in text['events']:
-            data = {'event name': event['name'], 'date': event['local_date'], 'time': event['local_time'], 'group name': event['group'].get('name'), 'target audience': event['group'].get('who'), 'event link': event['link']}
+            description = event.get('description', "no description found")
+            if event['venue']:
+                venue = event['venue']
+            data = {'k': event['name'],
+                    'date': str(datetime(int(event['local_date'][0:4]),
+                                         int(event['local_date'][5:7]),
+                                         int(event['local_date'][8:10]),
+                                         int(event['local_time'][0:2]),
+                                         int(event['local_time'][3:5]))),
+                    'caption': event['name'],
+                    'summary': 'An event held by {} for {}'.format(
+                        event['group'].get('name'),
+                        event['group'].get('who')),
+                    'story': description,
+                    'origin': event['link']}
+            n+=1
             record.append(data)
+        print("number of records: ", n)
+
         return record # newest 1st
 
 
 
 if __name__ == "__main__":
 
-    json_doc = Meetup().get_all()
-    print(json_doc)
+    sensor = Meetup()
+
+    n = 0
+    for i in range(5):
+        if sensor.has_updates(n):
+            json_doc = sensor.get_all()
+            print(json_doc)
+            time.sleep(4)
+            print("now we sleep")
 
